@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 fftw = "0.6"
-if_chain = "1.0"
 rand = "0.7"
 samplerate = "0.2"
 
