@@ -1,10 +1,7 @@
 use super::Elem;
 
-pub fn gradient(inp: &[Elem], out: &mut Vec<Elem>) {
+pub fn gradient(inp: &[Elem], mut out: impl FnMut(Elem)) {
     let mut inp = inp.iter();
-
-    out.reserve(inp.len());
-    let mut out = move |v| out.push(v);
 
     let mut f0 = if let Some(v) = inp.next() {
         v
@@ -57,7 +54,7 @@ mod test {
         ];
         for (inp, exp) in data {
             let act = &mut Vec::new();
-            gradient(inp, act);
+            gradient(inp, |v| act.push(v));
 
             for (a, e) in act.iter().zip(exp.iter()) {
                 assert_abs_diff_eq!(a, e, epsilon = 1e-5);
