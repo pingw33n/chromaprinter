@@ -20,12 +20,16 @@ impl FFT {
 }
 
 impl Step<i16, f64> for FFT {
-    fn process(&mut self, inp: &[i16], finish: bool) -> usize {
-        self.0.process(inp, finish)
+    fn process(&mut self, inp: &[i16]) -> usize {
+        self.0.process(inp)
     }
 
-    fn output<'a>(&'a self, inp: &'a [i16], finish: bool) -> &'a [f64] {
-        self.0.output(inp, finish)
+    fn finish(&mut self) {
+        self.0.finish();
+    }
+
+    fn output<'a>(&'a self, inp: &'a [i16]) -> &'a [f64] {
+        self.0.output(inp)
     }
 }
 
@@ -44,7 +48,7 @@ impl Internal {
 }
 
 impl Step<i16, f64> for Internal {
-    fn process(&mut self, inp: &[i16], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[i16]) -> usize {
         dbg!(inp.len());
         if inp.len() > 0 {
             self.imp.process(inp, &mut self.buf);
@@ -52,7 +56,9 @@ impl Step<i16, f64> for Internal {
         inp.len()
     }
 
-    fn output<'a>(&'a self, inp: &'a [i16], _finish: bool) -> &'a [f64] {
+    fn finish(&mut self) {}
+
+    fn output<'a>(&'a self, inp: &'a [i16]) -> &'a [f64] {
         if inp.len() > 0 {
             &self.buf
         } else {

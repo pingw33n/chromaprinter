@@ -28,7 +28,7 @@ impl Filter {
 }
 
 impl Step<f64, f64> for Filter {
-    fn process(&mut self, inp: &[f64], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[f64]) -> usize {
         self.buf[self.buf_pos].copy_from_slice(inp);
         let coefs_len = self.coefs.len();
         self.buf_pos = (self.buf_pos + 1) % coefs_len;
@@ -45,21 +45,17 @@ impl Step<f64, f64> for Filter {
         }
         self.buf_ready = self.buf_ready.saturating_add(1);
         inp.len()
-
     }
 
-    fn output<'a>(&'a self, _inp: &'a [f64], _finish: bool) -> &'a [f64] {
+    fn finish(&mut self) {}
+
+    fn output<'a>(&'a self, _inp: &'a [f64]) -> &'a [f64] {
         if self.buf_ready > self.coefs.len() {
             &self.out
         } else {
             &[]
         }
     }
-
-//    pub fn reset(&mut self) {
-//        self.buf_pos = 0;
-//        self.buf_len = 1;
-//    }
 }
 
 #[cfg(test)]
@@ -100,8 +96,8 @@ mod test {
             let mut a_i = 0;
             for (i, input) in inputs.iter().enumerate() {
                 let exp = i >= coefficients.len() - 1;
-                assert_eq!(filter.process(input, false), input.len());
-                let out = filter.output(input, false);
+                assert_eq!(filter.process(input), input.len());
+                let out = filter.output(input);
                 assert_eq!(!out.is_empty(), exp);
                 if !out.is_empty() {
                     actual[a_i].copy_from_slice(out);

@@ -5,6 +5,7 @@ pub struct Windows<T> {
     step: usize,
     buf: Vec<T>,
     buf_pos: usize,
+    finished: bool,
 }
 
 impl<T> Windows<T> {
@@ -16,6 +17,7 @@ impl<T> Windows<T> {
             step,
             buf: Vec::with_capacity(len * 2),
             buf_pos: 0,
+            finished: false,
         }
     }
 
@@ -25,7 +27,7 @@ impl<T> Windows<T> {
 }
 
 impl<T: Clone> Step<T, T> for Windows<T> {
-    fn process(&mut self, inp: &[T], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[T]) -> usize {
         if self.buf.len() == self.buf.capacity() {
             self.buf.drain(..self.buf_pos);
             self.buf_pos = 0;
@@ -41,9 +43,13 @@ impl<T: Clone> Step<T, T> for Windows<T> {
         consumed
     }
 
-    fn output<'a>(&'a self, _inp: &'a [T], finish: bool) -> &'a [T] {
+    fn finish(&mut self) {
+        self.finished = true;
+    }
+
+    fn output<'a>(&'a self, _inp: &'a [T]) -> &'a [T] {
         dbg!((self.available(), self.len, self.step));
-        if self.available() >= self.len || finish {
+        if self.available() >= self.len || self.finished {
             &self.buf[self.buf_pos..cmp::min(self.buf_pos + self.len, self.buf.len())]
         } else {
             &[]
@@ -84,9 +90,9 @@ mod test {
                 for &chunk in chunk_seq {
                     let mut inp = &input[..chunk];
                     loop {
-                        let consumed = w.process(inp, false);
+                        let consumed = w.process(inp);
                         dbg!(consumed);
-                        let out = w.output(inp, false);
+                        let out = w.output(inp);
                         if consumed == 0 && out.is_empty() {
                             break;
                         }

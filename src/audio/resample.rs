@@ -23,7 +23,7 @@ impl Resample {
 }
 
 impl Step<i16, i16> for Resample {
-    fn process(&mut self, inp: &[i16], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[i16]) -> usize {
         if let Some(imp) = &self.imp {
             // FIXME this is quite ineffective
             self.buf.clear();
@@ -44,7 +44,9 @@ impl Step<i16, i16> for Resample {
         inp.len()
     }
 
-    fn output<'a>(&'a self, inp: &'a [i16], _finish: bool) -> &'a [i16] {
+    fn finish(&mut self) {}
+
+    fn output<'a>(&'a self, inp: &'a [i16]) -> &'a [i16] {
         if !self.out.is_empty() {
             &self.out
         } else {
@@ -64,8 +66,8 @@ mod test {
         let exp = &read_audio_raw(include_bytes!("../../tests/data/test_mono_11025.raw"))[..];
 
         let mut r = Resample::new(44100, 11025);
-        assert_eq!(r.process(inp, false), inp.len());
-        for (&a, &e) in r.output(inp, false)[..1000].iter().zip(exp[..1000].iter()) {
+        assert_eq!(r.process(inp), inp.len());
+        for (&a, &e) in r.output(inp)[..1000].iter().zip(exp[..1000].iter()) {
             assert!((a as i32 - e as i32).abs() <= 20, "{} {}", a, e);
         }
     }

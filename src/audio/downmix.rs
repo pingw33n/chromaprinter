@@ -15,7 +15,7 @@ impl Downmix {
 }
 
 impl Step<i16, i16> for Downmix {
-    fn process(&mut self, inp: &[i16], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[i16]) -> usize {
         assert_eq!(inp.len() % self.src_channel_count as usize, 0);
 
         self.buf.clear();
@@ -40,7 +40,9 @@ impl Step<i16, i16> for Downmix {
         inp.len()
     }
 
-    fn output<'a>(&'a self, inp: &'a [i16], _finish: bool) -> &'a [i16] {
+    fn finish(&mut self) {}
+
+    fn output<'a>(&'a self, inp: &'a [i16]) -> &'a [i16] {
         if self.src_channel_count == 1 {
             inp
         } else {

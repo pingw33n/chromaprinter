@@ -55,7 +55,7 @@ impl Chroma {
 }
 
 impl Step<f64, f64> for Chroma {
-    fn process(&mut self, inp: &[f64], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[f64]) -> usize {
         dbg!(inp.len());
         if inp.is_empty() {
             return 0;
@@ -90,7 +90,10 @@ impl Step<f64, f64> for Chroma {
         inp.len()
     }
 
-    fn output<'a>(&'a self, inp: &'a [f64], _finish: bool) -> &'a [f64] {
+    fn finish(&mut self) {}
+
+
+    fn output<'a>(&'a self, inp: &'a [f64]) -> &'a [f64] {
         if inp.len() > 0 {
             &self.out
         } else {
@@ -156,9 +159,9 @@ mod test {
                 frame[i] = v;
             }
 
-            assert_eq!(chroma.process(&frame, false), frame.len());
+            assert_eq!(chroma.process(&frame), frame.len());
 
-            for (a, e) in chroma.output(&frame, false).iter().zip(expected) {
+            for (a, e) in chroma.output(&frame).iter().zip(expected) {
                 assert_abs_diff_eq!(a, e, epsilon = 0.0001);
             }
         }

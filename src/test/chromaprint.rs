@@ -21,14 +21,16 @@ impl Collector {
 }
 
 impl Step<f64, f64> for Collector {
-    fn process(&mut self, inp: &[f64], _finish: bool) -> usize {
+    fn process(&mut self, inp: &[f64]) -> usize {
         if inp.len() > 0 {
             self.feats.borrow_mut().push(inp.into());
         }
         inp.len()
     }
 
-    fn output<'a>(&'a self, inp: &'a [f64], _finish: bool) -> &'a [f64] {
+    fn finish(&mut self) {}
+
+    fn output<'a>(&'a self, inp: &'a [f64]) -> &'a [f64] {
         inp
     }
 }
@@ -53,12 +55,12 @@ fn test() {
 
     let mut inp = inp;
     for i in 0..100 {
-        let consumed = pipeline.process(inp, false);
-        let output = pipeline.output(inp, false);
+        let consumed = pipeline.process(inp);
+        let output = pipeline.output(inp);
         dbg!((i, consumed, output.len()));
         if consumed == 0 && output.is_empty() {
-            let consumed = pipeline.process(inp, true);
-            let output = pipeline.output(inp, true);
+            pipeline.finish();
+            let output = pipeline.output(&[]);
             dbg!((i, consumed, output.len()));
             break;
         }
@@ -67,5 +69,5 @@ fn test() {
     assert!(inp.is_empty());
     dbg!(coll.feats.borrow());
 
-    panic!();
+    // FIXME
 }
