@@ -23,12 +23,14 @@ impl Resample {
 }
 
 impl Step<i16, i16> for Resample {
-    fn process(&mut self, inp: &[i16]) -> usize {
+    fn process<F>(&mut self, input: &[i16], mut output: F)
+        where F: FnMut(&[i16])
+    {
         if let Some(imp) = &self.imp {
             // FIXME this is quite ineffective
             self.buf.clear();
-            self.buf.reserve(inp.len());
-            for &v in inp.iter() {
+            self.buf.reserve(input.len());
+            for &v in input.iter() {
                 self.buf.push((v as f64 / 32768.0) as f32);
             }
 
@@ -39,19 +41,16 @@ impl Step<i16, i16> for Resample {
             for &v in res.iter() {
                 self.out.push((v as f64 * 32768.0) as i16);
             }
-        }
 
-        inp.len()
+            output(&self.out);
+        } else {
+            output(input);
+        }
     }
 
-    fn finish(&mut self) {}
-
-    fn output<'a>(&'a self, inp: &'a [i16]) -> &'a [i16] {
-        if !self.out.is_empty() {
-            &self.out
-        } else {
-            inp
-        }
+    fn finish<F>(&mut self, _output: F)
+        where F: FnMut(&[i16])
+    {
     }
 }
 
@@ -59,15 +58,16 @@ impl Step<i16, i16> for Resample {
 mod test {
     use super::*;
     use crate::test::read_audio_raw;
+    use crate::pipeline::test_utils::*;
 
     #[test]
     fn test() {
         let inp = &read_audio_raw(include_bytes!("../../tests/data/test_mono_44100.raw"));
         let exp = &read_audio_raw(include_bytes!("../../tests/data/test_mono_11025.raw"))[..];
 
-        let mut r = Resample::new(44100, 11025);
-        assert_eq!(r.process(inp), inp.len());
-        for (&a, &e) in r.output(inp)[..1000].iter().zip(exp[..1000].iter()) {
+        let r = &mut Resample::new(44100, 11025);
+        let act = process_all_flat(r, inp);
+        for (&a, &e) in act[..1000].iter().zip(exp[..1000].iter()) {
             assert!((a as i32 - e as i32).abs() <= 20, "{} {}", a, e);
         }
     }

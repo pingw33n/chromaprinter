@@ -55,19 +55,17 @@ impl Chroma {
 }
 
 impl Step<f64, f64> for Chroma {
-    fn process(&mut self, inp: &[f64]) -> usize {
-        dbg!(inp.len());
-        if inp.is_empty() {
-            return 0;
-        }
-        debug_assert!(inp.len() >= self.max_index as usize);
+    fn process<F>(&mut self, input: &[f64], mut output: F)
+        where F: FnMut(&[f64])
+    {
+        assert!(input.len() >= self.max_index as usize);
         for v in self.out.iter_mut() {
             *v = 0.0;
         }
         for i in self.min_index..self.max_index {
             let i = i as usize;
             let note = self.notes[i];
-            let energy = inp[i];
+            let energy = input[i];
             if self.interpolate {
                 let note_frac = self.notes_frac[i];
                 let (note2, a) = if note_frac < 0.5 {
@@ -86,19 +84,12 @@ impl Step<f64, f64> for Chroma {
                 self.out[note as usize] += energy;
             }
         }
-
-        inp.len()
+        output(&self.out);
     }
 
-    fn finish(&mut self) {}
-
-
-    fn output<'a>(&'a self, inp: &'a [f64]) -> &'a [f64] {
-        if inp.len() > 0 {
-            &self.out
-        } else {
-            &[]
-        }
+    fn finish<F>(&mut self, _output: F)
+        where F: FnMut(&[f64])
+    {
     }
 }
 
@@ -111,6 +102,7 @@ fn freq_to_octave(freq: f64) -> f64 {
 mod test {
     use super::*;
     use approx::assert_abs_diff_eq;
+    use crate::pipeline::test_utils::*;
 
     #[test]
     fn chroma() {
@@ -151,7 +143,7 @@ mod test {
         for ((min_freq, max_freq, frame_len, sample_rate, interpolate), frame_def, expected)
             in data
         {
-            let mut chroma = Chroma::new(
+            let chroma = &mut Chroma::new(
                 *min_freq, *max_freq, *frame_len, *sample_rate, *interpolate);
 
             let mut frame = vec![0.0; 128];
@@ -159,9 +151,9 @@ mod test {
                 frame[i] = v;
             }
 
-            assert_eq!(chroma.process(&frame), frame.len());
+            let act = process_flat(chroma, &frame);
 
-            for (a, e) in chroma.output(&frame).iter().zip(expected) {
+            for (a, e) in act.iter().zip(expected) {
                 assert_abs_diff_eq!(a, e, epsilon = 0.0001);
             }
         }

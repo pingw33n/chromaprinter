@@ -1,11 +1,11 @@
 use super::*;
+use std::cmp;
 
 pub struct Windows<T> {
     len: usize,
     step: usize,
     buf: Vec<T>,
     buf_pos: usize,
-    finished: bool,
 }
 
 impl<T> Windows<T> {
@@ -17,7 +17,6 @@ impl<T> Windows<T> {
             step,
             buf: Vec::with_capacity(len * 2),
             buf_pos: 0,
-            finished: false,
         }
     }
 
@@ -27,32 +26,36 @@ impl<T> Windows<T> {
 }
 
 impl<T: Clone> Step<T, T> for Windows<T> {
-    fn process(&mut self, inp: &[T]) -> usize {
-        if self.buf.len() == self.buf.capacity() {
+    fn process<F>(&mut self, mut input: &[T], mut output: F)
+        where F: FnMut(&[T])
+    {
+        while input.len() > 0 {
+            if self.buf.is_empty() {
+                while input.len() >= self.len {
+                    output(&input[..self.len]);
+                    input = &input[self.step..];
+                }
+            }
+
+            let can_buf = cmp::min(input.len(), self.buf.capacity() - self.buf.len());
+            self.buf.extend_from_slice(&input[..can_buf]);
+            input = &input[can_buf..];
+
+            while self.buf.len() - self.buf_pos >= self.len {
+                output(&self.buf[self.buf_pos..self.buf_pos + self.len]);
+                self.buf_pos += self.step;
+            }
+
             self.buf.drain(..self.buf_pos);
             self.buf_pos = 0;
         }
-
-        if self.available() >= self.len {
-            dbg!(self.buf_pos);
-            self.buf_pos += self.step;
-        }
-
-        let consumed = cmp::min(inp.len(), self.buf.capacity() - self.buf.len());
-        self.buf.extend_from_slice(&inp[..consumed]);
-        consumed
     }
 
-    fn finish(&mut self) {
-        self.finished = true;
-    }
-
-    fn output<'a>(&'a self, _inp: &'a [T]) -> &'a [T] {
-        dbg!((self.available(), self.len, self.step));
-        if self.available() >= self.len || self.finished {
-            &self.buf[self.buf_pos..cmp::min(self.buf_pos + self.len, self.buf.len())]
-        } else {
-            &[]
+    fn finish<F>(&mut self, mut output: F)
+        where F: FnMut(&[T])
+    {
+        if !self.buf.is_empty() {
+            output(&self.buf);
         }
     }
 }
@@ -60,6 +63,7 @@ impl<T: Clone> Step<T, T> for Windows<T> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use super::test_utils::*;
 
     #[test]
     fn test() {
@@ -88,22 +92,7 @@ mod test {
                 let mut actual = Vec::new();
 
                 for &chunk in chunk_seq {
-                    let mut inp = &input[..chunk];
-                    loop {
-                        let consumed = w.process(inp);
-                        dbg!(consumed);
-                        let out = w.output(inp);
-                        if consumed == 0 && out.is_empty() {
-                            break;
-                        }
-                        if out.len() > 0 {
-                            actual.push(out.to_vec());
-                        }
-                        inp = &inp[consumed..];
-                    }
-
-                    assert!(inp.is_empty());
-
+                    w.process(&input[..chunk], collect(&mut actual));
                     input = &input[chunk..];
                 }
 
