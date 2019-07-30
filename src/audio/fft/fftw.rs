@@ -5,7 +5,7 @@ use ::fftw::types::{Flag, R2RKind};
 use super::*;
 
 pub struct FFTW {
-    window: HWindow,
+    window: HWindow<f64>,
     input: AlignedVec<f64>,
     output: AlignedVec<f64>,
     plan: R2RPlan64,
