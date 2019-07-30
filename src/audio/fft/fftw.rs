@@ -1,8 +1,9 @@
-use ::fftw::array::AlignedVec;
-use ::fftw::plan::{R2RPlan, R2RPlan64};
-use ::fftw::types::{Flag, R2RKind};
+use fftw_lib::array::AlignedVec;
+use fftw_lib::plan::{R2RPlan, R2RPlan64};
+use fftw_lib::types::{Flag, R2RKind};
 
 use super::*;
+use hwindow::HWindow;
 
 pub struct FFTW {
     window: HWindow<f64>,

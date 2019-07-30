@@ -4,12 +4,21 @@ version = "0.1.0"
 authors = ["Dmytro Lysai <d@emphased.net>"]
 edition = "2018"
 
+[features]
+default = ["fftw"]
+fftw = ["fftw_lib"]
+vdsp = []
+
 [dependencies]
-fftw = "0.6"
 num-traits = "0.2"
 rand = "0.7"
 samplerate = "0.2"
 
+fftw_lib = { package = "fftw", version = "0.6", optional = true }
+
 [dev-dependencies]
 approx = "0.3"
 byteorder = "1.3"
+
+[build-dependencies]
+foreman = "0.4"

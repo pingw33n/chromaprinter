@@ -1,37 +1,61 @@
+#[cfg(feature = "fftw")]
 mod fftw;
 mod hwindow;
+#[cfg(feature = "vdsp")]
+mod vdsp;
 
 use crate::pipeline::{Step, Then};
 use crate::pipeline::windows::Windows;
-use hwindow::HWindow;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum FFTImplKind {
+    #[cfg(feature = "fftw")]
     FFTW,
+
+    #[cfg(feature = "vdsp")]
+    VDSP,
 }
 
 impl Default for FFTImplKind {
     fn default() -> Self {
-        FFTImplKind::FFTW
+        use FFTImplKind::*;
+
+        #[cfg(feature = "fftw")]
+        { FFTW }
+
+        #[cfg(feature = "vdsp")]
+        { VDSP }
     }
 }
 
 enum FFTImpl {
+    #[cfg(feature = "fftw")]
     FFTW(fftw::FFTW),
+
+    #[cfg(feature = "vdsp")]
+    VDSP(vdsp::VDSP),
 }
 
 impl FFTImpl {
     pub fn new(kind: FFTImplKind, len: usize) -> Self {
         use FFTImpl::*;
         match kind {
+            #[cfg(feature = "fftw")]
             FFTImplKind::FFTW => FFTW(fftw::FFTW::new(len)),
+
+            #[cfg(feature = "vdsp")]
+            FFTImplKind::VDSP => VDSP(vdsp::VDSP::new(len)),
         }
     }
 
     pub fn process(&mut self, inp: &[i16], out: &mut [f64]) {
         use FFTImpl::*;
         match self {
+            #[cfg(feature = "fftw")]
             FFTW(v) => v.process(inp, out),
+
+            #[cfg(feature = "vdsp")]
+            VDSP(v) => v.process(inp, out),
         }
     }
 }

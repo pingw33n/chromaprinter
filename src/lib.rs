@@ -3,6 +3,10 @@
 //#![deny(unused_imports)]
 #![deny(unused_must_use)]
 
+#[cfg(__fail_bad_fft_feature)]
+compile_error!("Exactly one FFT library must be selected via features: fftw, vdsp. \
+                Did you forgot to disable default features?");
+
 mod audio;
 mod chroma;
 mod fingerprint;
