@@ -1,7 +1,7 @@
 pub mod buf;
 pub mod windows;
 #[cfg(test)]
-pub mod test_utils;
+pub mod test_util;
 
 use std::marker::PhantomData;
 
@@ -163,7 +163,7 @@ mod test {
     use super::*;
     use std::cmp;
 
-    use test_utils::*;
+    use test_util::*;
 
     struct TestStep<T> {
         id: &'static str,

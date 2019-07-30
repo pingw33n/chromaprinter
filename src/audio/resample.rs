@@ -57,8 +57,8 @@ impl Step<i16, i16> for Resample {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::read_audio_raw;
-    use crate::pipeline::test_utils::*;
+    use crate::test_util::read_audio_raw;
+    use crate::pipeline::test_util::*;
 
     #[test]
     fn test() {

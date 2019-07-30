@@ -58,7 +58,7 @@ impl Step<f64, f64> for Filter {
 mod test {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use crate::pipeline::test_utils::*;
+    use crate::pipeline::test_util::*;
 
     #[test]
     fn test() {

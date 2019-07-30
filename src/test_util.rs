@@ -1,5 +1,3 @@
-mod chromaprint;
-
 use byteorder::{LE, ReadBytesExt};
 use std::io::{Cursor, ErrorKind};
 

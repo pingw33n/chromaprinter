@@ -63,7 +63,7 @@ impl<T: Clone> Step<T, T> for Windows<T> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use super::test_utils::*;
+    use super::test_util::*;
 
     #[test]
     fn test() {

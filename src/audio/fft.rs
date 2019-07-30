@@ -118,7 +118,7 @@ mod test {
     use super::*;
     use approx::assert_abs_diff_eq;
     use std::f64::consts::PI;
-    use crate::pipeline::test_utils::*;
+    use crate::pipeline::test_util::*;
 
     #[test]
     fn test() {
