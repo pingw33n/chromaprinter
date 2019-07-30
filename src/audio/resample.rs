@@ -9,12 +9,12 @@ pub struct Resample {
 }
 
 impl Resample {
-    pub fn new(src_rate: u32, dst_rate: u32) -> Self {
+    pub fn new(in_sample_rate: u32, out_sample_rate: u32) -> Self {
         Self {
             buf: Vec::new(),
             out: Vec::new(),
-            imp: if src_rate != dst_rate {
-                Some(Samplerate::new(ConverterType::SincFastest, src_rate, dst_rate, 1).unwrap())
+            imp: if in_sample_rate != out_sample_rate {
+                Some(Samplerate::new(ConverterType::SincFastest, in_sample_rate, out_sample_rate, 1).unwrap())
             } else {
                 None
             }
